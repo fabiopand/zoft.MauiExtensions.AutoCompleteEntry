@@ -18,10 +18,42 @@ namespace zoft.MauiExtensions.Controls.Handlers
 	/// </summary>
 	public partial class AutoCompleteEntryHandler : IAutoCompleteEntryHandler
 	{
-		/// <summary>
-		/// Property mapper dictionary
-		/// </summary>
-		public static IPropertyMapper<AutoCompleteEntry, IAutoCompleteEntryHandler> Mapper =
+        #region TypingTimer
+
+        IDispatcherTimer typingTimer;
+
+        private void CreateTypingTimer()
+        {
+            typingTimer = Application.Current.Dispatcher.CreateTimer();
+            typingTimer.Interval = TimeSpan.FromSeconds(1);
+            typingTimer.Tick += OnTypingTimerTick;
+        }
+
+        private void ResetTypingTimer()
+        {
+            this.typingTimer.Stop();
+            this.typingTimer.Start();
+        }
+
+        private void OnTypingTimerTick(object sender, EventArgs e)
+        {
+#if __IOS__ || MACCATALYST || ANDROID || WINDOWS || TIZEN
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                VirtualView?.OnTextChanged(PlatformView.Text, AutoCompleteEntryTextChangeReason.UserInput);
+            });
+#endif
+
+            // The timer must be stopped! We want to act only once per keystroke.
+            typingTimer.Stop();
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Property mapper dictionary
+        /// </summary>
+        public static IPropertyMapper<AutoCompleteEntry, IAutoCompleteEntryHandler> Mapper =
 			new PropertyMapper<AutoCompleteEntry, IAutoCompleteEntryHandler>(ViewMapper)
 			{
 #if __IOS__
@@ -54,12 +86,13 @@ namespace zoft.MauiExtensions.Controls.Handlers
 		{
 		};
 
-		/// <summary>
-		/// Create an instance of <see cref="AutoCompleteEntryHandler"/>
-		/// </summary>
-		public AutoCompleteEntryHandler() : base(Mapper)
+        /// <summary>
+        /// Create an instance of <see cref="AutoCompleteEntryHandler"/>
+        /// </summary>
+        public AutoCompleteEntryHandler() : base(Mapper)
 		{
-		}
+            this.CreateTypingTimer();
+        }
 
         /// <summary>
         /// Create an instance of <see cref="AutoCompleteEntryHandler"/>
@@ -68,6 +101,7 @@ namespace zoft.MauiExtensions.Controls.Handlers
         public AutoCompleteEntryHandler(IPropertyMapper mapper)
 			: base(mapper ?? Mapper, CommandMapper)
 		{
+			this.CreateTypingTimer();
 		}
 
         /// <summary>
@@ -78,9 +112,10 @@ namespace zoft.MauiExtensions.Controls.Handlers
         public AutoCompleteEntryHandler(IPropertyMapper mapper, CommandMapper commandMapper)
 			: base(mapper ?? Mapper, commandMapper ?? CommandMapper)
 		{
-		}
+            this.CreateTypingTimer();
+        }
 
-		AutoCompleteEntry IAutoCompleteEntryHandler.VirtualView => VirtualView;
+        AutoCompleteEntry IAutoCompleteEntryHandler.VirtualView => VirtualView;
 
 		PlatformView IAutoCompleteEntryHandler.PlatformView => PlatformView;
 	}

@@ -56,7 +56,10 @@ namespace zoft.MauiExtensions.Controls.Handlers
 
         private void AutoSuggestBox_TextChanged(object sender, AutoSuggestBoxTextChangedEventArgs e)
         {
-            VirtualView?.OnTextChanged(PlatformView.Text, (AutoCompleteEntryTextChangeReason)e.Reason);
+            if (e.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
+                VirtualView?.OnTextChanged(PlatformView.Text, (AutoCompleteEntryTextChangeReason)e.Reason);
+            else
+                ResetTypingTimer();
         }
 
         private void AutoSuggestBox_SuggestionChosen(object sender, AutoSuggestBoxSuggestionChosenEventArgs e)

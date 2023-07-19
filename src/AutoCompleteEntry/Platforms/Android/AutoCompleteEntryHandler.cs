@@ -32,7 +32,10 @@ namespace zoft.MauiExtensions.Controls.Handlers
 
         private void AutoCompleteEntry_TextChanged(object sender, AutoCompleteEntryTextChangedEventArgs e)
         {
-            VirtualView?.OnTextChanged(PlatformView.Text, (AutoCompleteEntryTextChangeReason)e.Reason);
+            if (e.Reason != AutoCompleteEntryTextChangeReason.UserInput)
+                VirtualView?.OnTextChanged(PlatformView.Text, (AutoCompleteEntryTextChangeReason)e.Reason);
+            else
+                ResetTypingTimer();
         }
 
         private void AutoCompleteEntry_SuggestionChosen(object sender, AutoCompleteEntrySuggestionChosenEventArgs e)
